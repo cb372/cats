@@ -1,7 +1,7 @@
 import microsites._
 import ReleaseTransformations._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
-import org.scalajs.sbtplugin.cross.CrossProject
+import sbtcrossproject.{crossProject, CrossProject, CrossType}
 
 lazy val scoverageSettings = Seq(
   coverageMinimum := 60,
@@ -86,6 +86,11 @@ lazy val commonJvmSettings = Seq(
     val flag = if ((isTravisBuild in Global).value) "-oCI" else "-oDF"
     Tests.Argument(TestFrameworks.ScalaTest, flag)
   }
+)
+
+lazy val commonNativeSettings = Seq(
+  scalaVersion := "2.11.11",
+  crossScalaVersions := Seq("2.11.11")
 )
 
 lazy val includeGeneratedSrc: Setting[_] = {
@@ -358,7 +363,7 @@ lazy val catsJS = project.in(file(".catsJS"))
   .enablePlugins(ScalaJSPlugin)
 
 
-lazy val macros = crossProject.crossType(CrossType.Pure)
+lazy val macros = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .settings(moduleName := "cats-macros", name := "Cats macros")
   .settings(catsSettings)
   .jsSettings(commonJsSettings)
@@ -370,7 +375,7 @@ lazy val macrosJVM = macros.jvm
 lazy val macrosJS = macros.js
 
 
-lazy val kernel = crossProject.crossType(CrossType.Pure)
+lazy val kernel = crossProject(JSPlatform, JVMPlatform, NativePlatform).crossType(CrossType.Pure)
   .in(file("kernel"))
   .settings(moduleName := "cats-kernel", name := "Cats kernel")
   .settings(kernelSettings)
@@ -380,12 +385,14 @@ lazy val kernel = crossProject.crossType(CrossType.Pure)
   .settings(includeGeneratedSrc)
   .jsSettings(commonJsSettings)
   .jvmSettings(commonJvmSettings ++ mimaSettings("cats-kernel"))
+  .nativeSettings(commonNativeSettings)
 
 
 lazy val kernelJVM = kernel.jvm
 lazy val kernelJS = kernel.js
+lazy val kernelNative = kernel.native
 
-lazy val kernelLaws = crossProject.crossType(CrossType.Pure)
+lazy val kernelLaws = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("kernel-laws"))
   .settings(moduleName := "cats-kernel-laws", name := "Cats kernel laws")
   .settings(kernelSettings)
@@ -401,7 +408,7 @@ lazy val kernelLaws = crossProject.crossType(CrossType.Pure)
 lazy val kernelLawsJVM = kernelLaws.jvm
 lazy val kernelLawsJS = kernelLaws.js
 
-lazy val core = crossProject.crossType(CrossType.Pure)
+lazy val core = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .dependsOn(macros, kernel)
   .settings(moduleName := "cats-core", name := "Cats core")
   .settings(catsSettings)
@@ -416,7 +423,7 @@ lazy val core = crossProject.crossType(CrossType.Pure)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-lazy val laws = crossProject.crossType(CrossType.Pure)
+lazy val laws = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .dependsOn(macros, kernel, core, kernelLaws)
   .settings(moduleName := "cats-laws", name := "Cats laws")
   .settings(catsSettings)
@@ -430,7 +437,7 @@ lazy val laws = crossProject.crossType(CrossType.Pure)
 lazy val lawsJVM = laws.jvm
 lazy val lawsJS = laws.js
 
-lazy val free = crossProject.crossType(CrossType.Pure)
+lazy val free = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .dependsOn(macros, core, tests % "test-internal -> test")
   .settings(moduleName := "cats-free", name := "Cats Free")
   .settings(catsSettings)
@@ -440,7 +447,7 @@ lazy val free = crossProject.crossType(CrossType.Pure)
 lazy val freeJVM = free.jvm
 lazy val freeJS = free.js
 
-lazy val tests = crossProject.crossType(CrossType.Pure)
+lazy val tests = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .dependsOn(testkit % "test")
   .settings(moduleName := "cats-tests")
   .settings(catsSettings)
@@ -452,7 +459,7 @@ lazy val testsJVM = tests.jvm
 lazy val testsJS = tests.js
 
 
-lazy val testkit = crossProject.crossType(CrossType.Pure)
+lazy val testkit = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .dependsOn(macros, core, laws)
   .settings(moduleName := "cats-testkit")
   .settings(catsSettings)
@@ -465,7 +472,7 @@ lazy val testkit = crossProject.crossType(CrossType.Pure)
 lazy val testkitJVM = testkit.jvm
 lazy val testkitJS = testkit.js
 
-lazy val alleycatsCore = crossProject.crossType(CrossType.Pure)
+lazy val alleycatsCore = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("alleycats-core"))
   .dependsOn(core)
   .settings(moduleName := "alleycats-core", name := "Alleycats core")
@@ -484,7 +491,7 @@ lazy val alleycatsCore = crossProject.crossType(CrossType.Pure)
 lazy val alleycatsCoreJVM = alleycatsCore.jvm
 lazy val alleycatsCoreJS = alleycatsCore.js
 
-lazy val alleycatsLaws = crossProject.crossType(CrossType.Pure)
+lazy val alleycatsLaws = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("alleycats-laws"))
   .dependsOn(alleycatsCore, laws)
   .settings(moduleName := "alleycats-laws", name := "Alleycats laws")
@@ -501,7 +508,7 @@ lazy val alleycatsLaws = crossProject.crossType(CrossType.Pure)
 lazy val alleycatsLawsJVM = alleycatsLaws.jvm
 lazy val alleycatsLawsJS = alleycatsLaws.js
 
-lazy val alleycatsTests = crossProject.crossType(CrossType.Pure)
+lazy val alleycatsTests = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .in(file("alleycats-tests"))
   .dependsOn(alleycatsLaws, testkit % "test")
   .settings(moduleName := "alleycats-tests")
