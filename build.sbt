@@ -363,16 +363,18 @@ lazy val catsJS = project.in(file(".catsJS"))
   .enablePlugins(ScalaJSPlugin)
 
 
-lazy val macros = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
+lazy val macros = crossProject(JSPlatform, JVMPlatform, NativePlatform).crossType(CrossType.Pure)
   .settings(moduleName := "cats-macros", name := "Cats macros")
   .settings(catsSettings)
   .jsSettings(commonJsSettings)
   .jvmSettings(commonJvmSettings)
   .jsSettings(coverageEnabled := false)
+  .nativeSettings(commonNativeSettings)
   .settings(scalacOptions := scalacOptions.value.filter(_ != "-Xfatal-warnings"))
 
 lazy val macrosJVM = macros.jvm
 lazy val macrosJS = macros.js
+lazy val macrosNative = macros.native
 
 
 lazy val kernel = crossProject(JSPlatform, JVMPlatform, NativePlatform).crossType(CrossType.Pure)
@@ -408,7 +410,7 @@ lazy val kernelLaws = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.
 lazy val kernelLawsJVM = kernelLaws.jvm
 lazy val kernelLawsJS = kernelLaws.js
 
-lazy val core = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
+lazy val core = crossProject(JSPlatform, JVMPlatform, NativePlatform).crossType(CrossType.Pure)
   .dependsOn(macros, kernel)
   .settings(moduleName := "cats-core", name := "Cats core")
   .settings(catsSettings)
@@ -419,9 +421,11 @@ lazy val core = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .settings(libraryDependencies += "org.scalacheck" %%% "scalacheck" % scalaCheckVersion % "test")
   .jsSettings(commonJsSettings)
   .jvmSettings(commonJvmSettings ++ mimaSettings("cats-core") )
+  .nativeSettings(commonNativeSettings)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
+lazy val coreNative = core.native
 
 lazy val laws = crossProject(JSPlatform, JVMPlatform).crossType(CrossType.Pure)
   .dependsOn(macros, kernel, core, kernelLaws)
